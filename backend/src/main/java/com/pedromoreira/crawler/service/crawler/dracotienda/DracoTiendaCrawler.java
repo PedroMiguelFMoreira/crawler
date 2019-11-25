@@ -1,27 +1,51 @@
-package com.pedromoreira.crawler.service.crawler.dungeonmarvels;
+package com.pedromoreira.crawler.service.crawler.dracotienda;
 
 import com.pedromoreira.crawler.model.CrawlResult;
 import com.pedromoreira.crawler.service.crawler.PrestaShopCrawler;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Component
-public class DungeonMarvelsCrawler extends PrestaShopCrawler {
+public class DracoTiendaCrawler extends PrestaShopCrawler {
 
-    private static String URL = "https://dungeonmarvels.com/buscar";
+    private static String URL = "https://dracotienda.com/busqueda";
 
-    public DungeonMarvelsCrawler(RestTemplate restTemplate) {
-        super(URL, restTemplate);
+    public DracoTiendaCrawler() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        super(URL, DracoTiendaCrawler.getRestTemplate());
+    }
+
+    private static RestTemplate getRestTemplate() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        SSLContext sslContext = new SSLContextBuilder()
+                .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                .build();
+        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+        HttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(socketFactory)
+                .build();
+        HttpComponentsClientHttpRequestFactory httpComponentsClientHttpRequestFactory
+                = new HttpComponentsClientHttpRequestFactory(httpClient);
+
+        return new RestTemplate(httpComponentsClientHttpRequestFactory);
     }
 
     @SuppressWarnings("Duplicates")
@@ -33,13 +57,13 @@ public class DungeonMarvelsCrawler extends PrestaShopCrawler {
             Document document = Jsoup.parse(response.getBody());
             Element productList = document.getElementById("js-product-list").child(0);
 
-            Elements products = productList.getElementsByClass("product-container");
+            Elements products = productList.getElementsByClass("laberProduct-container");
 
             List<CrawlResult.Entry> entries = new ArrayList<>();
             for (Element product : products) {
                 CrawlResult.Entry.EntryBuilder entryBuilder = CrawlResult.Entry.builder();
 
-                String name = product.getElementsByClass("product-title").get(0).text();
+                String name = product.getElementsByClass("productName").get(0).text();
                 String price = product.getElementsByClass("price").text();
 
                 entryBuilder
@@ -53,10 +77,12 @@ public class DungeonMarvelsCrawler extends PrestaShopCrawler {
                             .oldPrice(oldPrice);
                 }
 
+
                 entries.add(entryBuilder.build());
             }
 
             return entries;
         });
     }
+
 }

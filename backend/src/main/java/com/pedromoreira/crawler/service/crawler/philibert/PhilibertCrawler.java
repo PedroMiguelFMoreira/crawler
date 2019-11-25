@@ -1,8 +1,5 @@
 package com.pedromoreira.crawler.service.crawler.philibert;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pedromoreira.crawler.model.CrawlResult;
 import com.pedromoreira.crawler.service.crawler.PrestaShopCrawler;
 import org.jsoup.Jsoup;

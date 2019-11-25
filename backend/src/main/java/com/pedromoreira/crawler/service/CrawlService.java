@@ -2,6 +2,7 @@ package com.pedromoreira.crawler.service;
 
 import com.pedromoreira.crawler.model.CrawlResult;
 import com.pedromoreira.crawler.service.crawler.Crawlable;
+import com.pedromoreira.crawler.service.crawler.dracotienda.DracoTiendaCrawler;
 import com.pedromoreira.crawler.service.crawler.dungeonmarvels.DungeonMarvelsCrawler;
 import com.pedromoreira.crawler.service.crawler.gameplay.GamePlayCrawler;
 import com.pedromoreira.crawler.service.crawler.philibert.PhilibertCrawler;
@@ -21,15 +22,17 @@ public class CrawlService {
 
     @Autowired
     public CrawlService(
+            DracoTiendaCrawler dracoTiendaCrawler,
+            DungeonMarvelsCrawler dungeonMarvelsCrawler,
             GamePlayCrawler gameplayCrawler,
-            PhilibertCrawler philibertCrawler,
-            DungeonMarvelsCrawler dungeonMarvelsCrawler
+            PhilibertCrawler philibertCrawler
     ) {
         this.crawlables = new ArrayList<>();
 
-        this.crawlables.add(gameplayCrawler);
-        this.crawlables.add(philibertCrawler);
-        this.crawlables.add(dungeonMarvelsCrawler);
+        this.crawlables.add(dracoTiendaCrawler);
+        //this.crawlables.add(dungeonMarvelsCrawler);
+        //this.crawlables.add(gameplayCrawler);
+        //this.crawlables.add(philibertCrawler);
     }
 
     public CompletionStage<List<CrawlResult>> crawl(String boardGameName) {
