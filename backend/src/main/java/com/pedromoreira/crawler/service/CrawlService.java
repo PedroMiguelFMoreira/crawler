@@ -32,10 +32,10 @@ public class CrawlService {
         this.crawlables.add(dungeonMarvelsCrawler);
     }
 
-    public CompletionStage<List<CrawlResult>> crawl(List<String> boardGameNames) {
+    public CompletionStage<List<CrawlResult>> crawl(String boardGameName) {
 
         List<CompletionStage<CrawlResult>> crawlResultsFuture = crawlables.stream()
-                .map(crawlable -> crawlable.crawl(boardGameNames))
+                .map(crawlable -> crawlable.crawl(boardGameName))
                 .collect(Collectors.toList());
 
         return Futures.sequence(crawlResultsFuture).thenApply(crawlResults -> crawlResults);

@@ -22,23 +22,12 @@ public abstract class PrestaShopCrawler implements Crawlable {
     protected RestTemplate restTemplate;
 
     @Override
-    public CompletionStage<CrawlResult> crawl(List<String> boardGameNames) {
+    public CompletionStage<CrawlResult> crawl(String boardGameName) {
         CrawlResult.CrawlResultBuilder crawlResultBuilder = CrawlResult.builder()
                 .crawlerName(this.getClass().getSimpleName());
 
-        List<CompletionStage<CrawlResult.SearchEntry>> searchEntryFutures = new ArrayList<>();
-        for (String boardGameName : boardGameNames) {
-            CompletionStage<CrawlResult.SearchEntry> searchEntryFuture = crawlBoardGame(boardGameName)
-                    .exceptionally(throwable -> CrawlResult.SearchEntry.builder()
-                            .name(boardGameName)
-                            .result(JsonNodeFactory.instance.arrayNode())
-                            .build()
-                    );
 
-            searchEntryFutures.add(searchEntryFuture);
-        }
-
-        return Futures.sequence(searchEntryFutures).thenApply(result -> crawlResultBuilder.searches(result).build());
+        return crawlBoardGame(boardGameName).thenApply(entries -> crawlResultBuilder.result(entries).build());
     }
 
     protected HttpEntity<String> doSearchRequestFor(String boardGameName) {
@@ -62,6 +51,6 @@ public abstract class PrestaShopCrawler implements Crawlable {
         );
     }
 
-    protected abstract CompletionStage<CrawlResult.SearchEntry> crawlBoardGame(String boardGameName);
+    protected abstract CompletionStage<List<CrawlResult.Entry>> crawlBoardGame(String boardGameName);
 
 }

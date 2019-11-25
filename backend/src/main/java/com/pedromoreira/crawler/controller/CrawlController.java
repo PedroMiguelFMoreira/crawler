@@ -24,9 +24,9 @@ public class CrawlController {
 
     @GetMapping
     public CompletionStage<List<CrawlResult>> getBoardGamePrice(
-            @RequestParam List<String> boardGameNames
+            @RequestParam String boardGameName
     ) {
-        return crawlService.crawl(boardGameNames);
+        return crawlService.crawl(boardGameName);
     }
 
 }

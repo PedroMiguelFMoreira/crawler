@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -32,7 +34,7 @@ public class DungeonMarvelsCrawler extends PrestaShopCrawler {
 
     @SuppressWarnings("Duplicates")
     @Override
-    protected CompletionStage<CrawlResult.SearchEntry> crawlBoardGame(String boardGameName) {
+    protected CompletionStage<List<CrawlResult.Entry>> crawlBoardGame(String boardGameName) {
         return CompletableFuture.supplyAsync(() -> {
             HttpEntity<String> response = doSearchRequestFor(boardGameName);
 
@@ -41,28 +43,28 @@ public class DungeonMarvelsCrawler extends PrestaShopCrawler {
 
             Elements products = productList.getElementsByClass("product-container");
 
-            ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-
+            List<CrawlResult.Entry> entries = new ArrayList<>();
             for (Element product : products) {
-                ObjectNode objectNode = arrayNode.addObject();
+                CrawlResult.Entry.EntryBuilder entryBuilder = CrawlResult.Entry.builder();
 
-                objectNode.put("name", product.getElementsByClass("product-title").get(0).text());
-
+                String name = product.getElementsByClass("product-title").get(0).text();
                 String price = product.getElementsByClass("price").text();
-                objectNode.put("price", price);
-                objectNode.put("has-discount", false);
+
+                entryBuilder
+                        .name(name)
+                        .price(price);
 
                 String oldPrice = product.getElementsByClass("regular-price").text();
                 if (oldPrice != null && !oldPrice.trim().isEmpty()) {
-                    objectNode.put("has-discount", true);
-                    objectNode.put("old-price", oldPrice);
+                    entryBuilder
+                            .hasDiscount(true)
+                            .oldPrice(oldPrice);
                 }
+
+                entries.add(entryBuilder.build());
             }
 
-            return CrawlResult.SearchEntry.builder()
-                    .name(boardGameName)
-                    .result(arrayNode)
-                    .build();
+            return entries;
         });
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -27,7 +29,7 @@ public class GamePlayCrawler extends PrestaShopCrawler {
 
     @SuppressWarnings("Duplicates")
     @Override
-    public CompletionStage<CrawlResult.SearchEntry> crawlBoardGame(String boardGameName) {
+    public CompletionStage<List<CrawlResult.Entry>> crawlBoardGame(String boardGameName) {
         return CompletableFuture.supplyAsync(() -> {
             HttpEntity<String> response = doSearchRequestFor(boardGameName);
 
@@ -36,28 +38,28 @@ public class GamePlayCrawler extends PrestaShopCrawler {
 
             Elements products = productList.getElementsByClass("ajax_block_product");
 
-            ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-
+            List<CrawlResult.Entry> entries = new ArrayList<>();
             for (Element product : products) {
-                ObjectNode objectNode = arrayNode.addObject();
+                CrawlResult.Entry.EntryBuilder entryBuilder = CrawlResult.Entry.builder();
 
-                objectNode.put("name", product.getElementsByClass("product-name").text());
-
+                String name = product.getElementsByClass("product-name").text();
                 String price = product.getElementsByClass("price product-price").text().split(" ")[0] + "€";
-                objectNode.put("price", price);
-                objectNode.put("has-discount", false);
+
+                entryBuilder
+                        .name(name)
+                        .price(price);
 
                 String oldPrice = product.getElementsByClass("old-price product-price").text();
                 if (oldPrice != null && !oldPrice.trim().isEmpty()) {
-                    objectNode.put("has-discount", true);
-                    objectNode.put("old-price", oldPrice.split(" ")[0] + "€");
+                    entryBuilder
+                            .hasDiscount(true)
+                            .oldPrice(oldPrice.split(" ")[0] + "€");
                 }
+
+                entries.add(entryBuilder.build());
             }
 
-            return CrawlResult.SearchEntry.builder()
-                    .name(boardGameName)
-                    .result(arrayNode)
-                    .build();
+            return entries;
         });
     }
 
