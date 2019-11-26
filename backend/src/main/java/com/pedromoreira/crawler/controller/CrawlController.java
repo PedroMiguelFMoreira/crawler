@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("crawl")
@@ -26,7 +28,19 @@ public class CrawlController {
     public CompletionStage<List<CrawlResult>> getBoardGamePrice(
             @RequestParam String boardGameName
     ) {
-        return crawlService.crawl(boardGameName);
+        CompletionStage<List<CrawlResult>> crawlResultsFuture = crawlService.crawl(boardGameName);
+
+        return crawlResultsFuture.thenApply(crawlResults -> crawlResults.stream()
+                .map(crawlResult -> {
+                    List<CrawlResult.Entry> validEntries = crawlResult.getResult()
+                            .stream()
+                            .filter(entry -> entry.getName().toLowerCase().contains(boardGameName.toLowerCase()))
+                            .collect(Collectors.toList());
+
+                    return CrawlResult.builder().crawlerName(crawlResult.getCrawlerName()).result(validEntries).build();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
     }
 
 }

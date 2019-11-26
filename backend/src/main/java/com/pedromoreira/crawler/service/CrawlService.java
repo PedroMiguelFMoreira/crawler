@@ -30,9 +30,9 @@ public class CrawlService {
         this.crawlables = new ArrayList<>();
 
         this.crawlables.add(dracoTiendaCrawler);
-        //this.crawlables.add(dungeonMarvelsCrawler);
-        //this.crawlables.add(gameplayCrawler);
-        //this.crawlables.add(philibertCrawler);
+        this.crawlables.add(dungeonMarvelsCrawler);
+        this.crawlables.add(gameplayCrawler);
+        this.crawlables.add(philibertCrawler);
     }
 
     public CompletionStage<List<CrawlResult>> crawl(String boardGameName) {

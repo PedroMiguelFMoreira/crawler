@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -24,7 +25,8 @@ public abstract class PrestaShopCrawler implements Crawlable {
                 .crawlerName(this.getClass().getSimpleName());
 
 
-        return crawlBoardGame(boardGameName).thenApply(entries -> crawlResultBuilder.result(entries).build());
+        return crawlBoardGame(boardGameName).thenApply(entries -> crawlResultBuilder.result(entries).build())
+                .exceptionally(throwable -> crawlResultBuilder.result(Collections.emptyList()).build());
     }
 
     protected HttpEntity<String> doSearchRequestFor(String boardGameName) {
